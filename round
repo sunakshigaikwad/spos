@@ -1,0 +1,67 @@
+import java.io.*;
+
+class round {
+    public static void main(String args[]) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        
+        System.out.print("Enter the number of processes: ");
+        int n = Integer.parseInt(reader.readLine());
+
+        int[] bt = new int[n];
+        int[] wt = new int[n];
+        int[] tat = new int[n];
+
+        System.out.println("Enter burst times for the processes:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter burst time for Process " + (i + 1) + ": ");
+            bt[i] = Integer.parseInt(reader.readLine());
+        }
+
+        System.out.print("Enter time quantum: ");
+        int q = Integer.parseInt(reader.readLine());
+
+        int[] remainingBt = new int[n];
+        System.arraycopy(bt, 0, remainingBt, 0, n);
+
+        int totalRemainingTime = n;
+        while (totalRemainingTime > 0) {
+            for (int i = 0; i < n; i++) {
+                if (remainingBt[i] > 0) {
+                    if (remainingBt[i] > q) {
+                        remainingBt[i] -= q;
+                        for (int j = 0; j < n; j++) {
+                            if (i != j && remainingBt[j] > 0) {
+                                wt[j] += q;
+                            }
+                        }
+                    } else {
+                        for (int j = 0; j < n; j++) {
+                            if (i != j && remainingBt[j] > 0) {
+                                wt[j] += remainingBt[i];
+                            }
+                        }
+                        remainingBt[i] = 0;
+                        totalRemainingTime--;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            tat[i] = wt[i] + bt[i];
+        }
+
+        System.out.println("\nProcess\tBurst Time\tWaiting Time\tTurnaround Time");
+        for (int i = 0; i < n; i++) {
+            System.out.println("P" + (i + 1) + "\t" + bt[i] + "\t\t" + wt[i] + "\t\t" + tat[i]);
+        }
+
+        float avgWt = 0, avgTat = 0;
+        for (int i = 0; i < n; i++) {
+            avgWt += wt[i];
+            avgTat += tat[i];
+        }
+        System.out.println("\nAverage Waiting Time: " + (avgWt / n));
+        System.out.println("Average Turnaround Time: " + (avgTat / n));
+    }
+}
