@@ -1,0 +1,44 @@
+import java.util.Scanner;
+
+public class fcfs{
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of processes: ");
+        int no_p = scanner.nextInt();
+
+        int[] burst_time = new int[no_p];
+        int[] WT = new int[no_p];
+        int[] TT = new int[no_p];
+
+        WT[0] = 0;
+
+        System.out.println("\nEnter burst times for each process:");
+        for (int i = 0; i < no_p; i++) {
+            System.out.print("Burst time for Process P" + (i + 1) + ": ");
+            burst_time[i] = scanner.nextInt();
+        }
+
+        float avg_wait = 0;
+        for (int i = 1; i < no_p; i++) {
+            WT[i] = WT[i - 1] + burst_time[i - 1];
+            avg_wait += WT[i];
+        }
+        avg_wait /= no_p;
+
+        float avg_TT = 0;
+        for (int i = 0; i < no_p; i++) {
+            TT[i] = WT[i] + burst_time[i];
+            avg_TT += TT[i];
+        }
+        avg_TT /= no_p;
+
+        System.out.println("Process\tBurst Time\tWaiting Time\tTurnaround Time");
+        for (int i = 0; i < no_p; i++) {
+            System.out.println("P" + (i + 1) + "\t" + burst_time[i] + "\t\t" + WT[i] + "\t\t" + TT[i]);
+        }
+
+        System.out.println("Average Waiting Time: " + avg_wait);
+        System.out.println("Average Turnaround Time: " + avg_TT);
+    }
+}
