@@ -1,0 +1,86 @@
+import java.util.concurrent.Semaphore;
+import java.util.Scanner;
+
+public class ReaderWriterProblem {
+
+    static Semaphore mutex = new Semaphore(1);
+    static Semaphore rwMutex = new Semaphore(1);
+    static int readCount = 0;
+
+    static class Reader extends Thread {
+        int readerId;
+
+        Reader(int id) {
+            this.readerId = id;
+        }
+
+        public void run() {
+            while (true) {
+                try {
+                    mutex.acquire();
+                    readCount++;
+                    if (readCount == 1) {
+                        rwMutex.acquire();
+                    }
+                    mutex.release();
+
+                    System.out.println("Reader " + readerId + " is reading.");
+                    Thread.sleep(1000);
+
+                    mutex.acquire();
+                    readCount--;
+                    if (readCount == 0) {
+                        rwMutex.release();
+                    }
+                    mutex.release();
+
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    static class Writer extends Thread {
+        int writerId;
+
+        Writer(int id) {
+            this.writerId = id;
+        }
+
+        public void run() {
+            while (true) {
+                try {
+                    rwMutex.acquire();
+                    System.out.println("Writer " + writerId + " is writing.");
+                    Thread.sleep(1000);
+                    rwMutex.release();
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter number of readers: ");
+        int numReaders = scanner.nextInt();
+
+        System.out.print("Enter number of writers: ");
+        int numWriters = scanner.nextInt();
+
+        for (int i = 1; i <= numReaders; i++) {
+            new Reader(i).start();
+        }
+
+        for (int i = 1; i <= numWriters; i++) {
+            new Writer(i).start();
+        }
+
+        scanner.close();
+    }
+}
