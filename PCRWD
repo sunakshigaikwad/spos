@@ -1,0 +1,214 @@
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Scanner;
+
+public class PCRWD {
+
+    static int MAX_BUFFER_SIZE;
+    static Queue<Integer> buffer = new LinkedList<>();
+    static int item = 0;
+
+    static class Semaphore {
+        private int value;
+
+        public Semaphore(int value) {
+            this.value = value;
+        }
+
+        public synchronized void waitSemaphore() {
+            while (value == 0) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            value--;
+        }
+
+        public synchronized void signal() {
+            value++;
+            notify();
+        }
+    }
+
+    static Semaphore empty;
+    static Semaphore full;
+    static Semaphore mutex;
+
+    static class Producer extends Thread {
+        public void run() {
+            while (true) {
+                empty.waitSemaphore();
+                mutex.waitSemaphore();
+
+                buffer.add(item++);
+                System.out.println("Produced: " + (item - 1));
+
+                mutex.signal();
+                full.signal();
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    static class Consumer extends Thread {
+        public void run() {
+            while (true) {
+                full.waitSemaphore();
+                mutex.waitSemaphore();
+
+                int consumedItem = buffer.poll();
+                System.out.println("Consumed: " + consumedItem);
+
+                mutex.signal();
+                empty.signal();
+
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    static class ReaderWriter {
+        static Semaphore mutexRW = new Semaphore(1);
+        static Semaphore readCountMutex = new Semaphore(1);
+        static int readCount = 0;
+
+        static class Reader extends Thread {
+            public void run() {
+                while (true) {
+                    try {
+                        readCountMutex.waitSemaphore();
+                        readCount++;
+                        if (readCount == 1) {
+                            mutexRW.waitSemaphore();
+                        }
+                        readCountMutex.signal();
+
+                        System.out.println("Reader " + Thread.currentThread().getId() + " is reading.");
+
+                        readCountMutex.waitSemaphore();
+                        readCount--;
+                        if (readCount == 0) {
+                            mutexRW.signal();
+                        }
+                        readCountMutex.signal();
+
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+
+        static class Writer extends Thread {
+            public void run() {
+                while (true) {
+                    try {
+                        mutexRW.waitSemaphore();
+                        System.out.println("Writer " + Thread.currentThread().getId() + " is writing.");
+                        mutexRW.signal();
+
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+    }
+
+    static class DiningPhilosophers {
+        static int NUM_PHILOSOPHERS;
+        static Semaphore[] forks;
+
+        static class Philosopher extends Thread {
+            private int philosopherId;
+
+            public Philosopher(int id) {
+                philosopherId = id;
+            }
+
+            public void run() {
+                while (true) {
+                    think();
+
+                    forks[philosopherId].waitSemaphore();
+                    forks[(philosopherId + 1) % NUM_PHILOSOPHERS].waitSemaphore();
+
+                    eat();
+
+                    forks[philosopherId].signal();
+                    forks[(philosopherId + 1) % NUM_PHILOSOPHERS].signal();
+                }
+            }
+
+            private void think() {
+                System.out.println("Philosopher " + philosopherId + " is thinking.");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            private void eat() {
+                System.out.println("Philosopher " + philosopherId + " is eating.");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        public static void initializeForks() {
+            forks = new Semaphore[NUM_PHILOSOPHERS];
+            for (int i = 0; i < NUM_PHILOSOPHERS; i++) {
+                forks[i] = new Semaphore(1);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the maximum buffer size for Producer-Consumer: ");
+        MAX_BUFFER_SIZE = scanner.nextInt();
+        empty = new Semaphore(MAX_BUFFER_SIZE);
+        full = new Semaphore(0);
+        mutex = new Semaphore(1);
+
+        System.out.print("Enter the number of philosophers for Dining Philosophers: ");
+        DiningPhilosophers.NUM_PHILOSOPHERS = scanner.nextInt();
+
+        Thread producer = new Producer();
+        Thread consumer = new Consumer();
+        producer.start();
+        consumer.start();
+
+        Thread reader1 = new ReaderWriter.Reader();
+        Thread reader2 = new ReaderWriter.Reader();
+        Thread writer = new ReaderWriter.Writer();
+        reader1.start();
+        reader2.start();
+        writer.start();
+
+        DiningPhilosophers.initializeForks();
+        for (int i = 0; i < DiningPhilosophers.NUM_PHILOSOPHERS; i++) {
+            new DiningPhilosophers.Philosopher(i).start();
+        }
+
+        scanner.close();
+    }
+}
