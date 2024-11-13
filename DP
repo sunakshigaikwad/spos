@@ -1,0 +1,72 @@
+import java.util.concurrent.Semaphore;
+import java.util.Scanner;
+
+public class DiningPhilosophers {
+
+    static class Philosopher extends Thread {
+        int id;
+        Semaphore leftFork;
+        Semaphore rightFork;
+
+        Philosopher(int id, Semaphore leftFork, Semaphore rightFork) {
+            this.id = id;
+            this.leftFork = leftFork;
+            this.rightFork = rightFork;
+        }
+
+        public void run() {
+            while (true) {
+                think();
+                eat();
+            }
+        }
+
+        public void think() {
+            try {
+                System.out.println("Philosopher " + id + " is thinking.");
+                Thread.sleep((int) (Math.random() * 1000));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        public void eat() {
+            try {
+                leftFork.acquire();
+                System.out.println("Philosopher " + id + " picked up left fork.");
+                rightFork.acquire();
+                System.out.println("Philosopher " + id + " picked up right fork.");
+
+                System.out.println("Philosopher " + id + " is eating.");
+                Thread.sleep((int) (Math.random() * 1000));
+
+                leftFork.release();
+                rightFork.release();
+                System.out.println("Philosopher " + id + " put down forks.");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of philosophers: ");
+        int numPhilosophers = scanner.nextInt();
+
+        Semaphore[] forks = new Semaphore[numPhilosophers];
+
+        for (int i = 0; i < numPhilosophers; i++) {
+            forks[i] = new Semaphore(1);
+        }
+
+        Philosopher[] philosophers = new Philosopher[numPhilosophers];
+        for (int i = 0; i < numPhilosophers; i++) {
+            philosophers[i] = new Philosopher(i, forks[i], forks[(i + 1) % numPhilosophers]);
+            philosophers[i].start();
+        }
+
+        scanner.close();
+    }
+}
