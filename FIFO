@@ -1,0 +1,59 @@
+import java.util.Scanner;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class FIFO {
+
+    public static void pageReplacement(int[] pages, int numFrames) {
+        Queue<Integer> frames = new LinkedList<>();
+        int pageFaults = 0;
+        boolean pageFound;
+
+        for (int i = 0; i < pages.length; i++) {
+            pageFound = false;
+
+            if (frames.contains(pages[i])) {
+                pageFound = true;
+            }
+
+            if (!pageFound) {
+                if (frames.size() == numFrames) {
+                    frames.poll();
+                }
+                frames.add(pages[i]);
+                pageFaults++;
+                System.out.println("Page " + pages[i] + " caused a page fault.");
+            } else {
+                System.out.println("Page " + pages[i] + " is already in memory.");
+            }
+
+            System.out.print("Current frames: ");
+            for (int frame : frames) {
+                System.out.print(frame + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("\nTotal page faults: " + pageFaults);
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of frames: ");
+        int numFrames = scanner.nextInt();
+
+        System.out.print("Enter the number of pages: ");
+        int numPages = scanner.nextInt();
+        int[] pages = new int[numPages];
+
+        System.out.println("Enter the pages:");
+        for (int i = 0; i < numPages; i++) {
+            pages[i] = scanner.nextInt();
+        }
+
+        pageReplacement(pages, numFrames);
+
+        scanner.close();
+    }
+}
