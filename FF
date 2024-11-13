@@ -1,0 +1,46 @@
+import java.util.Scanner;
+
+public class FF{
+
+    public static void allocate(int[] blocks, int[] processes) {
+        System.out.println("First Fit Allocation:");
+        for (int i = 0; i < processes.length; i++) {
+            boolean allocated = false;
+            for (int j = 0; j < blocks.length; j++) {
+                if (blocks[j] >= processes[i]) {
+                    System.out.println("Process " + (i + 1) + " allocated to Block " + (j + 1));
+                    blocks[j] -= processes[i];
+                    allocated = true;
+                    break;
+                }
+            }
+            if (!allocated) {
+                System.out.println("Process " + (i + 1) + " could not be allocated");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of blocks: ");
+        int numBlocks = scanner.nextInt();
+        int[] blocks = new int[numBlocks];
+        System.out.println("Enter the sizes of the blocks:");
+        for (int i = 0; i < numBlocks; i++) {
+            blocks[i] = scanner.nextInt();
+        }
+
+        System.out.print("Enter the number of processes: ");
+        int numProcesses = scanner.nextInt();
+        int[] processes = new int[numProcesses];
+        System.out.println("Enter the sizes of the processes:");
+        for (int i = 0; i < numProcesses; i++) {
+            processes[i] = scanner.nextInt();
+        }
+
+        allocate(blocks, processes);
+
+        scanner.close();
+    }
+}
