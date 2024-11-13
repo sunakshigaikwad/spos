@@ -1,0 +1,85 @@
+import java.util.Scanner;
+
+public class Optimal {
+
+    public static void pageReplacement(int[] pages, int numFrames) {
+        int pageFaults = 0;
+        int[] frames = new int[numFrames];
+        for (int i = 0; i < numFrames; i++) {
+            frames[i] = -1;
+        }
+
+        for (int i = 0; i < pages.length; i++) {
+            boolean pageFound = false;
+            for (int j = 0; j < numFrames; j++) {
+                if (frames[j] == pages[i]) {
+                    pageFound = true;
+                    break;
+                }
+            }
+
+            if (!pageFound) {
+                int replaceIndex = getReplaceIndex(pages, i, frames, numFrames);
+                frames[replaceIndex] = pages[i];
+                pageFaults++;
+                System.out.println("Page " + pages[i] + " caused a page fault.");
+            } else {
+                System.out.println("Page " + pages[i] + " is already in memory.");
+            }
+
+            System.out.print("Current frames: ");
+            for (int frame : frames) {
+                System.out.print(frame + " ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("\nTotal page faults: " + pageFaults);
+    }
+
+    private static int getReplaceIndex(int[] pages, int currentIndex, int[] frames, int numFrames) {
+        int farthest = -1;
+        int replaceIndex = -1;
+
+        for (int i = 0; i < numFrames; i++) {
+            int nextUse = findNextUse(pages, currentIndex, frames[i]);
+            if (nextUse == -1) {
+                return i;
+            }
+            if (nextUse > farthest) {
+                farthest = nextUse;
+                replaceIndex = i;
+            }
+        }
+        return replaceIndex;
+    }
+
+    private static int findNextUse(int[] pages, int currentIndex, int page) {
+        for (int i = currentIndex + 1; i < pages.length; i++) {
+            if (pages[i] == page) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of frames: ");
+        int numFrames = scanner.nextInt();
+
+        System.out.print("Enter the number of pages: ");
+        int numPages = scanner.nextInt();
+        int[] pages = new int[numPages];
+
+        System.out.println("Enter the pages:");
+        for (int i = 0; i < numPages; i++) {
+            pages[i] = scanner.nextInt();
+        }
+
+        pageReplacement(pages, numFrames);
+
+        scanner.close();
+    }
+}
