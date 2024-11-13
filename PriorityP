@@ -1,0 +1,87 @@
+import java.util.Scanner;
+
+class Process {
+    int id, arrivalTime, burstTime, priority, remainingTime, waitingTime, turnaroundTime;
+
+    Process(int id, int arrivalTime, int burstTime, int priority) {
+        this.id = id;
+        this.arrivalTime = arrivalTime;
+        this.burstTime = burstTime;
+        this.priority = priority;
+        this.remainingTime = burstTime;
+    }
+}
+
+public class PrioritySchedulingP {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of processes: ");
+        int n = scanner.nextInt();
+
+        Process[] processes = new Process[n];
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter arrival time, burst time, and priority for process " + (i + 1) + ": ");
+            int arrivalTime = scanner.nextInt();
+            int burstTime = scanner.nextInt();
+            int priority = scanner.nextInt();
+            processes[i] = new Process(i + 1, arrivalTime, burstTime, priority);
+        }
+
+        // Sort processes by arrival time
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (processes[i].arrivalTime > processes[j].arrivalTime) {
+                    Process temp = processes[i];
+                    processes[i] = processes[j];
+                    processes[j] = temp;
+                }
+            }
+        }
+
+        int currentTime = 0;
+        boolean[] isCompleted = new boolean[n];
+        int completedProcesses = 0;
+        int totalWaitTime = 0, totalTurnaroundTime = 0;
+
+        while (completedProcesses < n) {
+            int idx = -1;
+            int maxPriority = Integer.MIN_VALUE;
+
+            // Find the process with the highest priority
+            for (int i = 0; i < n; i++) {
+                if (!isCompleted[i] && processes[i].arrivalTime <= currentTime && processes[i].priority > maxPriority) {
+                    maxPriority = processes[i].priority;
+                    idx = i;
+                }
+            }
+
+            if (idx != -1) {
+                Process p = processes[idx];
+                p.remainingTime--;
+                System.out.println("Time " + currentTime + ": Process " + p.id + " is executing");
+
+                if (p.remainingTime == 0) {
+                    isCompleted[idx] = true;
+                    completedProcesses++;
+                    p.turnaroundTime = currentTime + 1 - p.arrivalTime;
+                    p.waitingTime = p.turnaroundTime - p.burstTime;
+                    totalTurnaroundTime += p.turnaroundTime;
+                    totalWaitTime += p.waitingTime;
+                    System.out.println("Process " + p.id + " finished at time " + (currentTime + 1));
+                }
+            }
+
+            currentTime++;
+        }
+
+        int avgWaitTime = totalWaitTime / n;
+        int avgTurnaroundTime = totalTurnaroundTime / n;
+
+        System.out.println("\nAverage Waiting Time: " + avgWaitTime);
+        System.out.println("Average Turnaround Time: " + avgTurnaroundTime);
+
+        scanner.close();
+    }
+}
