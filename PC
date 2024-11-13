@@ -1,0 +1,97 @@
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Scanner;
+
+public class ProducerConsumerProblem {
+
+    static Queue<Integer> buffer = new LinkedList<>();
+    static int item = 0;
+
+    static class Semaphore {
+        private int value;
+
+        public Semaphore(int value) {
+            this.value = value;
+        }
+
+        public synchronized void waitSemaphore() {
+            while (value == 0) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            value--;
+        }
+
+        public synchronized void signal() {
+            value++;
+            notify();
+        }
+    }
+
+    static Semaphore empty;
+    static Semaphore full;
+    static Semaphore mutex = new Semaphore(1);
+
+    static class Producer extends Thread {
+        public void run() {
+            while (true) {
+                empty.waitSemaphore();  // Wait for empty space in the buffer
+                mutex.waitSemaphore();  // Lock the buffer
+
+                buffer.add(item++);
+                System.out.println("Produced: " + (item - 1));
+
+                mutex.signal();  // Release the buffer lock
+                full.signal();   // Signal that an item has been produced
+
+                try {
+                    Thread.sleep(1000); // Simulate time taken to produce an item
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    static class Consumer extends Thread {
+        public void run() {
+            while (true) {
+                full.waitSemaphore();  // Wait for items in the buffer
+                mutex.waitSemaphore();  // Lock the buffer
+
+                int consumedItem = buffer.poll();
+                System.out.println("Consumed: " + consumedItem);
+
+                mutex.signal();  // Release the buffer lock
+                empty.signal();  // Signal that space is available in the buffer
+
+                try {
+                    Thread.sleep(1500); // Simulate time taken to consume an item
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the buffer size: ");
+        int bufferSize = scanner.nextInt();
+
+        empty = new Semaphore(bufferSize);
+        full = new Semaphore(0);
+
+        Thread producer = new Producer();
+        Thread consumer = new Consumer();
+
+        producer.start();
+        consumer.start();
+        
+        scanner.close();
+    }
+}
