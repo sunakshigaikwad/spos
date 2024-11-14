@@ -1,0 +1,64 @@
+import java.util.Scanner;
+
+class SJFN {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of processes: ");
+        int n = sc.nextInt();
+
+        int[] arrivalTime = new int[n];
+        int[] burstTime = new int[n];
+        int[] waitingTime = new int[n];
+        int[] turnaroundTime = new int[n];
+        int[] completionTime = new int[n];
+        
+        System.out.println("Enter arrival and burst times:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("Arrival time for P" + (i + 1) + ": ");
+            arrivalTime[i] = sc.nextInt();
+            System.out.print("Burst time for P" + (i + 1) + ": ");
+            burstTime[i] = sc.nextInt();
+        }
+
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (arrivalTime[i] > arrivalTime[j] ||
+                   (arrivalTime[i] == arrivalTime[j] && burstTime[i] > burstTime[j])) {
+                    int temp;
+
+                    temp = arrivalTime[i];
+                    arrivalTime[i] = arrivalTime[j];
+                    arrivalTime[j] = temp;
+
+                    temp = burstTime[i];
+                    burstTime[i] = burstTime[j];
+                    burstTime[j] = temp;
+                }
+            }
+        }
+
+        int currentTime = 0;
+        for (int i = 0; i < n; i++) {
+            if (currentTime < arrivalTime[i]) {
+                currentTime = arrivalTime[i];
+            }
+            waitingTime[i] = currentTime - arrivalTime[i];
+            turnaroundTime[i] = waitingTime[i] + burstTime[i];
+            completionTime[i] = currentTime + burstTime[i];
+            currentTime += burstTime[i];
+        }
+
+        System.out.println("\nProcess\tArrival Time\tBurst Time\tWaiting Time\tTurnaround Time\tCompletion Time");
+        int totalWait = 0, totalTAT = 0;
+        for (int i = 0; i < n; i++) {
+            System.out.println("P" + (i + 1) + "\t" + arrivalTime[i] + "\t\t" + burstTime[i] +
+                               "\t\t" + waitingTime[i] + "\t\t" + turnaroundTime[i] + "\t\t" + completionTime[i]);
+            totalWait += waitingTime[i];
+            totalTAT += turnaroundTime[i];
+        }
+
+        System.out.println("\nAverage Waiting Time: " + (float) totalWait / n);
+        System.out.println("Average Turnaround Time: " + (float) totalTAT / n);
+    }
+}
